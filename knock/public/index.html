@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Knock · Network port scanner</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23131a26'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%237fb4ff' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%2342e0a0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><svg width="26" height="26" viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="none" stroke="currentColor" stroke-width="2" opacity=".5"/><circle cx="16" cy="16" r="7" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="16" r="2.5" fill="var(--open)"/></svg>Knock</div>
+  <p class="tag">Find out which doors are open on your network.</p>
+  <span id="mode" class="mode"></span>
+</header>
+
+<main>
+  <div class="workspace">
+    <form id="form" class="panel">
+      <h2>New scan</h2>
+      <label>Target <input id="target" value="127.0.0.1" placeholder="192.168.1.10 or myserver.local" required spellcheck="false" autocomplete="off"></label>
+      <div id="chips" class="chips"></div>
+
+      <fieldset>
+        <legend>Ports</legend>
+        <div id="presets" class="seg">
+          <button type="button" data-p="top" class="on">Top 100</button>
+          <button type="button" data-p="common">Common</button>
+          <button type="button" data-p="web">Web</button>
+          <button type="button" data-p="1-1024">1–1024</button>
+          <button type="button" data-p="1-65535">All</button>
+        </div>
+        <input id="ports" placeholder="e.g. 22,80,443,8000-8100" spellcheck="false" autocomplete="off">
+        <small id="portCount"></small>
+      </fieldset>
+
+      <label>Timeout <output id="toOut">1000 ms</output><input id="timeout" type="range" min="200" max="4000" step="100" value="1000"></label>
+      <label>Parallel connections <output id="coOut">150</output><input id="conc" type="range" min="10" max="500" step="10" value="150"></label>
+      <label class="check"><input id="banner" type="checkbox" checked> Read service banners</label>
+      <label class="check"><input id="consent" type="checkbox"> I own this system or have written permission to scan it</label>
+      <div class="row"><button id="go" class="primary" type="submit">Start scan</button><button id="stop" class="ghost" type="button" hidden>Stop</button></div>
+      <p id="err" class="err" role="alert" hidden></p>
+    </form>
+
+    <section class="panel radar-panel" aria-label="Port radar">
+      <div class="radar-head">
+        <div><h2 id="status">Ready to scan</h2><p id="sub">Results appear on the radar as ports answer.</p></div>
+        <dl class="stats">
+          <div><dt>Scanned</dt><dd id="sDone">0</dd></div>
+          <div><dt>Closed</dt><dd id="sClosed">0</dd></div>
+          <div><dt>Filtered</dt><dd id="sFilt">0</dd></div>
+          <div><dt>Time</dt><dd id="sTime">0.0s</dd></div>
+        </dl>
+      </div>
+      <div class="canvas-wrap"><canvas id="radar"></canvas><div id="tip" class="tip" hidden></div></div>
+      <div class="legend"><span class="d low"></span>Low risk <span class="d med"></span>Review <span class="d high"></span>Risky <span class="hint">Rings: well-known, registered, dynamic ports</span></div>
+      <div class="bar"><i id="bar"></i></div>
+    </section>
+  </div>
+
+  <section class="panel results" id="results">
+    <div class="toolbar">
+      <h2>Open ports <span id="cnt" class="badge">0</span></h2>
+      <input id="filter" type="search" placeholder="Filter by port or service">
+      <label class="check"><input id="riskOnly" type="checkbox"> Risky only</label>
+      <div class="exp"><button id="expJson" class="ghost" type="button">JSON</button><button id="expCsv" class="ghost" type="button">CSV</button></div>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Port</th><th>Service</th><th>Risk</th><th>Banner</th><th>Latency</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+    <p id="empty" class="empty">No results yet. Pick a target, confirm permission, and start a scan.</p>
+  </section>
+
+  <section class="guide panel">
+    <h2>Reading the results</h2>
+    <dl>
+      <dt>Open</dt><dd>A service accepted the connection. Every open port is attack surface, so keep only what you need.</dd>
+      <dt>Closed</dt><dd>The host answered and refused. Nothing is listening there.</dd>
+      <dt>Filtered</dt><dd>No answer before the timeout. A firewall is probably dropping the traffic.</dd>
+      <dt>How it works</dt><dd>Knock performs a TCP connect scan from the machine running the server, so results reflect that machine's view of the target.</dd>
+    </dl>
+    <p class="legal">Only scan systems you own or are authorised to test. Unauthorised scanning may be illegal.</p>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
